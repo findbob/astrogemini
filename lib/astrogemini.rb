@@ -1,17 +1,17 @@
-require "astrogemini/version"
-require "httparty"
-require "open-uri"
-require "json"
-require "mime/types"
-require "tempfile"
-require "securerandom"
+require 'astrogemini/version'
+require 'httparty'
+require 'open-uri'
+require 'json'
+require 'mime/types'
+require 'tempfile'
+require 'securerandom'
 
 module AstroGemini
   class Client
     include HTTParty
 
-    BASE_URI = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash"
-    UPLOAD_URI = "https://generativelanguage.googleapis.com/upload/v1beta/files"
+    BASE_URI = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash'
+    UPLOAD_URI = 'https://generativelanguage.googleapis.com/upload/v1beta/files'
     MAX_INLINE_SIZE = 20 * 1024 * 1024 # 20MB in bytes
 
     def initialize(api_key)
@@ -21,7 +21,7 @@ module AstroGemini
 
     def add_to_context(sources)
       sources.each do |source|
-        if source.start_with?("http://", "https://")
+        if source.start_with?('http://', 'https://')
           @context_array << process_remote_file(source)
         elsif File.exist?(source)
           @context_array << process_local_file(source)
@@ -46,7 +46,25 @@ module AstroGemini
 
       response = self.class.post(
         "#{BASE_URI}:generateContent?key=#{@api_key}",
-        headers: { "Content-Type" => "application/json" },
+        headers: { 'Content-Type' => 'application/json' },
+        body: body.to_json
+      )
+      handle_response(response)
+    end
+
+    def generate_embedding(text)
+      body = {
+        model: 'models/text-embedding-004',
+        content: {
+          parts: [
+            { text: text.to_s }
+          ]
+        }
+      }
+
+      response = self.class.post(
+        "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=#{@api_key}",
+        headers: { 'Content-Type' => 'application/json' },
         body: body.to_json
       )
       handle_response(response)
@@ -100,8 +118,8 @@ module AstroGemini
     end
 
     def download_file(url)
-      temp_file = Tempfile.new(["astrogemini", File.extname(url)], binmode: true)
-      URI.open(url, "rb") do |remote_file|
+      temp_file = Tempfile.new(['astrogemini', File.extname(url)], binmode: true)
+      URI.open(url, 'rb') do |remote_file|
         temp_file.binmode
         temp_file.write(remote_file.read)
       end
@@ -126,43 +144,43 @@ module AstroGemini
       response = self.class.post(
         "#{UPLOAD_URI}?key=#{@api_key}",
         headers: {
-          "X-Goog-Upload-Protocol" => "resumable",
-          "X-Goog-Upload-Command" => "start",
-          "X-Goog-Upload-Header-Content-Length" => file_size.to_s,
-          "X-Goog-Upload-Header-Content-Type" => mime_type,
-          "Content-Type" => "application/json"
+          'X-Goog-Upload-Protocol' => 'resumable',
+          'X-Goog-Upload-Command' => 'start',
+          'X-Goog-Upload-Header-Content-Length' => file_size.to_s,
+          'X-Goog-Upload-Header-Content-Type' => mime_type,
+          'Content-Type' => 'application/json'
         },
         body: { file: { display_name: display_name } }.to_json
       )
 
-      upload_url = response.headers["x-goog-upload-url"]
+      upload_url = response.headers['x-goog-upload-url']
       raise Error, "Failed to initiate upload: #{response.body}" if upload_url.nil? || upload_url.strip.empty?
 
       upload_url
     end
 
     def upload_file_content(upload_url, file, file_size)
-      raise Error, "Invalid upload URL" if upload_url.nil? || upload_url.strip.empty?
+      raise Error, 'Invalid upload URL' if upload_url.nil? || upload_url.strip.empty?
 
       uri = URI.parse(upload_url)
       file.binmode
       response = self.class.put(
         uri.to_s,
         headers: {
-          "Content-Length" => file_size.to_s,
-          "X-Goog-Upload-Offset" => "0",
-          "X-Goog-Upload-Command" => "upload, finalize"
+          'Content-Length' => file_size.to_s,
+          'X-Goog-Upload-Offset' => '0',
+          'X-Goog-Upload-Command' => 'upload, finalize'
         },
         body: file.read
       )
 
       raise Error, "Failed to upload file content: #{response.body}" unless response.success?
 
-      JSON.parse(response.body).dig("file", "uri") || raise(Error, "No file URI")
+      JSON.parse(response.body).dig('file', 'uri') || raise(Error, 'No file URI')
     end
 
     def get_mime_type(file_path)
-      MIME::Types.type_for(file_path).first&.to_s || "application/octet-stream"
+      MIME::Types.type_for(file_path).first&.to_s || 'application/octet-stream'
     end
   end
 
