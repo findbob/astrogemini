@@ -54,7 +54,7 @@ module AstroGemini
 
     def generate_embedding(text)
       body = {
-        model: 'models/text-embedding-004',
+        model: 'models/gemini-embedding-001',
         content: {
           parts: [
             { text: text.to_s }
@@ -63,7 +63,7 @@ module AstroGemini
       }
 
       response = self.class.post(
-        "https://generativelanguage.googleapis.com/v1/models/text-embedding-004:embedContent?key=#{@api_key}",
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=#{@api_key}",
         headers: { 'Content-Type' => 'application/json' },
         body: body.to_json
       )
