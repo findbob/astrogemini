@@ -63,7 +63,7 @@ module AstroGemini
       }
 
       response = self.class.post(
-        "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=#{@api_key}",
+        "https://generativelanguage.googleapis.com/v1/models/text-embedding-004:embedContent?key=#{@api_key}",
         headers: { 'Content-Type' => 'application/json' },
         body: body.to_json
       )
