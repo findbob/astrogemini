@@ -52,14 +52,15 @@ module AstroGemini
       handle_response(response)
     end
 
-    def generate_embedding(text)
+    def generate_embedding(text, dimensions: 1536)
       body = {
         model: 'models/gemini-embedding-001',
         content: {
           parts: [
             { text: text.to_s }
           ]
-        }
+        },
+        outputDimensionality: dimensions
       }
 
       response = self.class.post(
