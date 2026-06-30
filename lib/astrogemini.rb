@@ -10,12 +10,14 @@ module AstroGemini
   class Client
     include HTTParty
 
-    BASE_URI = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash'
+    GENERATE_CONTENT_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
     UPLOAD_URI = 'https://generativelanguage.googleapis.com/upload/v1beta/files'
     MAX_INLINE_SIZE = 20 * 1024 * 1024 # 20MB in bytes
+    DEFAULT_MODEL = 'gemini-2.5-flash'
 
-    def initialize(api_key)
+    def initialize(api_key, model: DEFAULT_MODEL)
       @api_key = api_key
+      @model = model
       @context_array = []
     end
 
@@ -45,7 +47,7 @@ module AstroGemini
       }.merge(options)
 
       response = self.class.post(
-        "#{BASE_URI}:generateContent?key=#{@api_key}",
+        "#{GENERATE_CONTENT_BASE}/#{@model}:generateContent?key=#{@api_key}",
         headers: { 'Content-Type' => 'application/json' },
         body: body.to_json
       )
